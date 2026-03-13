@@ -1,0 +1,34 @@
+name: AI Assistant Coder
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  run-ai-coder:
+    # Only run if the issue has the 'ai-task' label
+    if: contains(github.event.issue.labels.*.name, 'ai-task')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        # We need PyGithub to touch the repo and the Gemini SDK for the brain
+        run: pip install PyGithub google-generativeai
+
+      - name: Run AI Assistant
+        env:
+          # Pulling from your repository secrets
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          # GitHub automatically provides these context variables
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: python assistant.py
